@@ -1,58 +1,96 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
 
-body, * {
-    font-family: 'Roboto', sans-serif;
-    margin: 0;
-    padding: 0;
+body,
+* {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 h1 {
-    margin: 1rem;
+  margin: 1rem;
+  text-align: center;
 }
 
-.cards {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    flex-wrap: wrap;
+.button-container {
+  text-align: right;
+  margin: 1rem;
 }
 
-.card {
-    flex-basis: 31%;
-    margin: 1rem 0.4rem;
-    padding: 1rem 0.4rem 2.5rem 0.4rem;
-    border: solid 1px lightgrey;
-    border-radius: 15px;
-    box-shadow: 3px 2px 6px lightgrey;
+.button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s;
 }
 
-.card__email {
-    font-size: 1rem;
+.button:hover {
+  background-color: #45a049;
 }
 
-.form-wrapper {
-    font-size: 18px;
-    max-width: 768px;
-    margin: 2rem auto;
-    padding: 2rem;
-    border: solid 1px lightgrey;
-    border-radius: 15px;
-    box-shadow: 3px 2px 6px lightgrey;
+.table-container {
+  padding: 1rem;
+  margin: auto;
+  max-width: 1000px;
 }
 
-label, input {
-    margin-top: 5px;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.75rem;
+  border: solid 1px lightgrey;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.update-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.update-button:hover {
+  background-color: #45a049;
+}
+
+@media (max-width: 768px) {
+  table, th, td {
     display: block;
-    font-size: inherit;
-}
-
-input[type="text"] {
-    padding: .25rem;
-}
-
-input[type="submit"] {
-    background-color: lightgrey;
-    border: none;
-    padding: .375rem 1rem;
-    margin-top: 10px;
+  }
+  th, td {
+    padding: 0.5rem;
+  }
+  th {
+    text-align: right;
+  }
+  th::after {
+    content: ": ";
+  }
+  tr {
+    margin-bottom: 1rem;
+    border-bottom: solid 1px lightgrey;
+  }
+  tr:nth-child(even) {
+    background-color: transparent;
+  }
 }

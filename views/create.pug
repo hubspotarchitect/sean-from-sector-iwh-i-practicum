@@ -1,0 +1,23 @@
+doctype html
+html
+  head
+    title= title
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    link(rel='stylesheet', href='/css/css_update.css')
+  body
+    .header
+      a.btn(href='/') Home
+    h1 Create Custom Object Form | Integrating With HubSpot I Practicum.
+    .form-card
+      form(action='/create-cobj-req', method='POST')
+        .form-group
+          label(for='project_name') Name:
+          input(type='text', id='project_name', name='project_name', required)
+        .form-group
+          label(for='details') Details:
+          input(type='text', id='details', name='details', required)
+        .form-group
+          label(for='amount') Amount:
+          input(type='number', id='amount', name='amount', required)
+        .form-group
+          input.btn(type='submit', value='Create Object')

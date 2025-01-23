@@ -1,71 +1,150 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
 const app = express();
+require("dotenv").config();
 
-app.set('view engine', 'pug');
-app.use(express.static(__dirname + '/public'));
+app.set("view engine", "pug");
+app.use(express.static(__dirname + "/public"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// * Please DO NOT INCLUDE the private app access token in your repo. Don't do this practicum in your normal account.
-const PRIVATE_APP_ACCESS = '';
+const PRIVATE_APP_ACCESS = process.env.HS_TOKEN;
+const CUSTOM_OBJECT_TYPE = "2-39766856"; // Replace with your custom object type ID
+let customObjectsData = []; // To store fetched custom objects data
 
-// TODO: ROUTE 1 - Create a new app.get route for the homepage to call your custom object data. Pass this data along to the front-end and create a new pug template in the views folder.
-
-// * Code for Route 1 goes here
-
-// TODO: ROUTE 2 - Create a new app.get route for the form to create or update new custom object data. Send this data along in the next route.
-
-// * Code for Route 2 goes here
-
-// TODO: ROUTE 3 - Create a new app.post route for the custom objects form to create or update your custom object data. Once executed, redirect the user to the homepage.
-
-// * Code for Route 3 goes here
-
-/** 
-* * This is sample code to give you a reference for how you should structure your calls. 
-
-* * App.get sample
-app.get('/contacts', async (req, res) => {
-    const contacts = 'https://api.hubspot.com/crm/v3/objects/contacts';
-    const headers = {
-        Authorization: `Bearer ${PRIVATE_APP_ACCESS}`,
-        'Content-Type': 'application/json'
-    }
+// Function to fetch custom objects data if not already fetched
+const fetchCustomObjectsData = async () => {
+  if (customObjectsData.length === 0) {
     try {
-        const resp = await axios.get(contacts, { headers });
-        const data = resp.data.results;
-        res.render('contacts', { title: 'Contacts | HubSpot APIs', data });      
-    } catch (error) {
-        console.error(error);
-    }
-});
-
-* * App.post sample
-app.post('/update', async (req, res) => {
-    const update = {
-        properties: {
-            "favorite_book": req.body.newVal
-        }
-    }
-
-    const email = req.query.email;
-    const updateContact = `https://api.hubapi.com/crm/v3/objects/contacts/${email}?idProperty=email`;
-    const headers = {
+      const custom_objects_url = `https://api.hubapi.com/crm/v3/objects/${CUSTOM_OBJECT_TYPE}?properties=project_name,details,amount`;
+      const headers = {
         Authorization: `Bearer ${PRIVATE_APP_ACCESS}`,
-        'Content-Type': 'application/json'
-    };
-
-    try { 
-        await axios.patch(updateContact, update, { headers } );
-        res.redirect('back');
-    } catch(err) {
-        console.error(err);
+        "Content-Type": "application/json",
+      };
+      const resp = await axios.get(custom_objects_url, { headers });
+      customObjectsData = resp.data.results;
+    } catch (error) {
+      console.error(error);
+      throw new Error("Failed to fetch custom objects data");
     }
+  }
+};
 
+// Route 1 - Homepage to render custom objects data
+app.get("/", async (req, res) => {
+  try {
+    await fetchCustomObjectsData(); // Ensure data is fetched before rendering
+    res.render("homepage", {
+      title: "Custom Objects | HubSpot APIs",
+      data: customObjectsData,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
 });
-*/
 
+// Route 2 - Form to update custom object data (redirects to update.pug)
+app.get("/update-cobj/:id", async (req, res) => {
+  const objectId = req.params.id;
+  try {
+    await fetchCustomObjectsData(); // Ensure data is fetched before finding object
+    const objectToUpdate = customObjectsData.find(
+      (obj) => obj.properties.hs_object_id === objectId
+    );
+    if (!objectToUpdate) {
+      return res.status(404).send("Object not found");
+    }
+    res.render("update", {
+      title: "Update Custom Object Form | Integrating With HubSpot I Practicum",
+      objectData: objectToUpdate.properties,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
-// * Localhost
-app.listen(3000, () => console.log('Listening on http://localhost:3000'));
+// Route 3 - POST route to update custom object data
+app.post("/update-cobj", async (req, res) => {
+  const objectId = req.body.id;
+  const updateData = {
+    properties: {
+      project_name: req.body.project_name,
+      details: req.body.details,
+      amount: req.body.amount,
+    },
+  };
+
+  const custom_object_url = `https://api.hubapi.com/crm/v3/objects/${CUSTOM_OBJECT_TYPE}/${objectId}`;
+  const headers = {
+    Authorization: `Bearer ${PRIVATE_APP_ACCESS}`,
+    "Content-Type": "application/json",
+  };
+
+  try {
+    await axios.patch(custom_object_url, updateData, { headers });
+    // Update customObjectsData in-memory to reflect the changes
+    const index = customObjectsData.findIndex(
+      (obj) => obj.properties.hs_object_id === objectId
+    );
+    if (index !== -1) {
+      customObjectsData[index].properties.project_name = req.body.project_name;
+      customObjectsData[index].properties.details = req.body.details;
+      customObjectsData[index].properties.amount = req.body.amount;
+    }
+    res.redirect("/"); // Redirect back to homepage
+  } catch (error) {
+    console.error(error);
+    res.redirect("back"); // Redirect back to the form
+  }
+});
+
+// Route 4 - Render form to create a new custom object
+app.get("/create-cobj", async (req, res) => {
+  res.render("create", {
+    title: "Create Custom Object | Integrating With HubSpot I Practicum",
+  });
+});
+
+// Route 5 - POST route to create custom object data
+app.post("/create-cobj-req", async (req, res) => {
+  const createData = {
+    properties: {
+      project_name: req.body.project_name,
+      details: req.body.details,
+      amount: req.body.amount,
+    },
+  };
+
+  const custom_object_url = `https://api.hubapi.com/crm/v3/objects/${CUSTOM_OBJECT_TYPE}`;
+  const headers = {
+    Authorization: `Bearer ${PRIVATE_APP_ACCESS}`,
+    "Content-Type": "application/json",
+  };
+
+  try {
+    const response = await axios.post(custom_object_url, createData, {
+      headers,
+    });
+    // Assuming the response contains the newly created object's data
+    const newObject = response.data; // This should include the ID and other properties
+
+    // Update customObjectsData in-memory to reflect the changes
+    customObjectsData.push(newObject); // Add the new object to the array
+
+    res.redirect("/"); // Redirect back to homepage after successful creation
+  } catch (error) {
+    console.error(error);
+    // Example: Render the create.pug template again with an error message
+    res.render("create", {
+      title: "Create Custom Object | Integrating With HubSpot I Practicum",
+      errorMessage: "Failed to create custom object. Please try again later.",
+      // Pass other necessary data back to the form
+    });
+  }
+});
+
+// Localhost
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Listening on http://localhost:${PORT}`));
